@@ -1,0 +1,16 @@
+{
+    "glfw_window": {
+        "x": -1040,
+        "width": 600,
+        "y": 151,
+        "height": 600
+    },
+    "natives_path": "native",
+    "jfx_stage": {
+        "width": 653,
+        "x": -1805,
+        "y": 85,
+        "height": 400
+    },
+    "shader_path": "src/main/resources/shaders"
+}
