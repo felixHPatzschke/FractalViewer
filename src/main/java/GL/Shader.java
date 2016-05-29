@@ -65,6 +65,7 @@ public class Shader {
         {
             System.err.println("IOException: ");
             ioex.printStackTrace(System.err);
+            // TODO: Let the user choose a shader location/file
             return "";
         }
     }

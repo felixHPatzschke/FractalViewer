@@ -1,15 +1,15 @@
 {
     "glfw_window": {
-        "x": -1040,
-        "width": 600,
-        "y": 151,
-        "height": 600
+        "x": 0,
+        "width": 2736,
+        "y": 45,
+        "height": 1699
     },
     "natives_path": "native",
     "jfx_stage": {
-        "width": 653,
-        "x": -1805,
-        "y": 85,
+        "width": 250,
+        "x": 20,
+        "y": 20,
         "height": 400
     },
     "shader_path": "src/main/resources/shaders"

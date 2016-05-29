@@ -87,7 +87,7 @@ public abstract class Settings {
         jfx_x = 20;
         jfx_y = 20;
 
-        shader_path = "";
+        shader_path = "src/main/resources/shaders";
         natives_path = "native";
 
         exportConfig();
