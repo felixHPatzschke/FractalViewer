@@ -20,7 +20,7 @@ public class Shader {
 
     private int vertex_shader, fragment_shader;
     private int shader_program;
-    private int tx, ty, scale, max_i, aspect;
+    private int tx, ty, scale, max_i, aspect, sx, sy;
 
     public Shader(String name)
     {
@@ -31,7 +31,7 @@ public class Shader {
         glCompileShader(vertex_shader);
 
         fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(fragment_shader, readFile(Settings.shader_path + "\\" + name + ".frag", charset));
+        glShaderSource(fragment_shader, readFile(Settings.shader_path + "\\" + name, charset));
         glCompileShader(fragment_shader);
 
         int vert_status = glGetShaderi(vertex_shader, GL_COMPILE_STATUS);
@@ -49,6 +49,8 @@ public class Shader {
         bind();
         tx = glGetUniformLocation(shader_program, "translx");
         ty = glGetUniformLocation(shader_program, "transly");
+        sx = glGetUniformLocation(shader_program, "seed_real");
+        sy = glGetUniformLocation(shader_program, "seed_imag");
         scale = glGetUniformLocation(shader_program, "scale");
         max_i = glGetUniformLocation(shader_program, "max_iter");
         aspect = glGetUniformLocation(shader_program, "aspect");
@@ -110,6 +112,16 @@ public class Shader {
     public int getAspectLocation()
     {
         return aspect;
+    }
+
+    public int getSeedRealLocation()
+    {
+        return sx;
+    }
+
+    public int getSeedImagLocation()
+    {
+        return sy;
     }
 
 }

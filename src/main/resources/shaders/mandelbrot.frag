@@ -9,6 +9,8 @@ uniform float scale;
 uniform int max_iter;
 uniform float aspect;
 uniform sampler1D tex;
+uniform float seed_real;
+uniform float seed_imag;
 
 out vec4 frag_color;
 

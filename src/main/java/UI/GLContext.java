@@ -24,7 +24,6 @@ public class GLContext extends Thread
     private long /** GLFWwindow* */ window;
     private Shader shader = null;
     private Camera camera = null;
-    private int width, height;
     private int vao, vbo, ibo;
     private GLFWErrorCallback errorCallback = null;
     private GLFWKeyCallback keyCallback = null;
@@ -54,11 +53,8 @@ public class GLContext extends Thread
         glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE); // the window will stay hidden after creation
         glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE); // the window will be resizable
 
-        width = Settings.glfw_window_width;
-        height = Settings.glfw_window_height;
-
         // Create the window
-        window = glfwCreateWindow(width, height, Settings.title, NULL, NULL);
+        window = glfwCreateWindow(Settings.glfw_window_width, Settings.glfw_window_height, Settings.title, NULL, NULL);
         if ( window == NULL )
             throw new RuntimeException("Failed to create the GLFW window");
         // Make the OpenGL context current
@@ -67,7 +63,7 @@ public class GLContext extends Thread
         GL.createCapabilities();
 
         try{
-            shader = new Shader("mandelbrot");
+            shader = new Shader("julia.frag");
         } catch (Exception ex)
         {
             ex.printStackTrace(System.err);
@@ -81,55 +77,62 @@ public class GLContext extends Thread
             @Override
             public void invoke(long window, int key, int scancode, int action, int mods) {
                 something_changed = true;
-                if(key == GLFW_KEY_LEFT && action == GLFW_RELEASE)
-                    camera.translate(-1, 0);
-                if(key == GLFW_KEY_RIGHT && action == GLFW_RELEASE)
-                    camera.translate(1, 0);
-                if(mods == GLFW_MOD_SHIFT)
+                float multiplier = 1.0f;
+                if((mods & GLFW_MOD_SHIFT) != 0)
                 {
-                    if(key == GLFW_KEY_UP && action == GLFW_RELEASE)
-                        camera.zoom(-1);
-                    if(key == GLFW_KEY_DOWN && action == GLFW_RELEASE)
-                        camera.zoom(1);
-                }else if(mods == GLFW_MOD_CONTROL)
+                    multiplier = 0.1f;
+                }
+                if((mods & GLFW_MOD_CONTROL) != 0)
                 {
-                    if(key == GLFW_KEY_UP && action == GLFW_RELEASE)
-                    {
-                        camera.increment_iterations(1);
-                        System.out.println(camera.getIterations());
-                    }
-                    if(key == GLFW_KEY_DOWN && action == GLFW_RELEASE)
-                    {
-                        camera.increment_iterations(-1);
-                        System.out.println(camera.getIterations());
-                    }
-                }else
+                    if(key == GLFW_KEY_UP && action == GLFW_PRESS)
+                        camera.zoom(-multiplier);
+                    if(key == GLFW_KEY_DOWN && action == GLFW_PRESS)
+                        camera.zoom(multiplier);
+                }
+                if((mods & GLFW_MOD_ALT) != 0)
                 {
-                    if(key == GLFW_KEY_UP && action == GLFW_RELEASE)
-                        camera.translate(0, 1);
-                    if(key == GLFW_KEY_DOWN && action == GLFW_RELEASE)
-                        camera.translate(0, -1);
+                    if(key == GLFW_KEY_LEFT && action == GLFW_PRESS)
+                        camera.shift_seed(multiplier*-0.01f, 0.0f);
+                    if(key == GLFW_KEY_RIGHT && action == GLFW_PRESS)
+                        camera.shift_seed(multiplier*0.01f, 0.0f);
+                    if(key == GLFW_KEY_UP && action == GLFW_PRESS)
+                        camera.shift_seed(0.0f, multiplier*0.01f);
+                    if(key == GLFW_KEY_DOWN && action == GLFW_PRESS)
+                        camera.shift_seed(0.0f, multiplier*-0.01f);
+                }
+                if((mods | GLFW_MOD_SHIFT) == GLFW_MOD_SHIFT)
+                {
+                    if(key == GLFW_KEY_LEFT && action == GLFW_PRESS)
+                        camera.translate(-multiplier, 0);
+                    if(key == GLFW_KEY_RIGHT && action == GLFW_PRESS)
+                        camera.translate(multiplier, 0);
+                    if(key == GLFW_KEY_UP && action == GLFW_PRESS)
+                        camera.translate(0, multiplier);
+                    if(key == GLFW_KEY_DOWN && action == GLFW_PRESS)
+                        camera.translate(0, -multiplier);
                 }
                 if(key == GLFW_KEY_SPACE && action == GLFW_RELEASE)
                     camera.reset();
+                if(key == GLFW_KEY_W&& action == GLFW_PRESS)
+                    camera.increment_iterations(1);
+                if(key == GLFW_KEY_Q && action == GLFW_PRESS)
+                    camera.increment_iterations(-1);
             }
         });
         glfwSetWindowSizeCallback(window, windowSizeCallback = new GLFWWindowSizeCallback() {
             @Override
             public void invoke(long window, int x, int y) {
                 something_changed = true;
-                width = x;
-                height = y;
                 Settings.glfw_window_width = x;
                 Settings.glfw_window_height = y;
-                glViewport(0, 0, width, height);
-                camera.setAspectRatio(width, height);
+                glViewport(0, 0, Settings.glfw_window_width, Settings.glfw_window_height);
+                camera.setAspectRatio(Settings.glfw_window_width, Settings.glfw_window_height);
             }
         });
         glfwSetWindowPosCallback(window, windowPosCallback = new GLFWWindowPosCallback() {
             @Override
             public void invoke(long window, int xpos, int ypos) {
-                something_changed = true;
+                //something_changed = true;
                 Settings.glfw_window_x = xpos;
                 Settings.glfw_window_y = ypos;
             }
@@ -141,9 +144,6 @@ public class GLContext extends Thread
             }
         });
 
-        // Get the resolution of the primary monitor
-        GLFWVidMode vidmode = glfwGetVideoMode(glfwGetPrimaryMonitor());
-        // Center our window
         glfwSetWindowPos(window, Settings.glfw_window_x, Settings.glfw_window_y);
 
         // Enable v-sync
@@ -152,6 +152,7 @@ public class GLContext extends Thread
         // Make the window visible
         glfwShowWindow(window);
 
+        // Create a Vertex Buffer Objectand Vertex Array Object
         IntBuffer vertices = BufferUtils.createIntBuffer(8);
         vertices.put(new int[] {-1, -1, 1, -1, 1, 1, -1, 1});
         vertices.flip();

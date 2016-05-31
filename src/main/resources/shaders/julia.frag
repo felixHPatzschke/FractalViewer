@@ -1,7 +1,7 @@
 #version 400
 
-#define SEED_REAL   /**0.0/**/     /**-0.7269**/     /**/-0.8/**/    /**-0.381966**/
-#define SEED_IMAG   /**1.0/**/     /**0.1889**/      /**/0.156/**/   /**0.618034**/
+#define SEED_REAL   /**0.0/**/     /**-0.7269/**/     /**/-0.8/**/    /**-0.381966/**/
+#define SEED_IMAG   /**1.0/**/     /**0.1889/**/      /**/0.156/**/   /**0.618034/**/
 
 in vec2 frag_pos;
 
@@ -11,6 +11,8 @@ uniform float scale;
 uniform int max_iter;
 uniform float aspect;
 uniform sampler1D tex;
+uniform float seed_real;
+uniform float seed_imag;
 
 out vec4 frag_color;
 
@@ -28,7 +30,7 @@ vec4 get_c(uint i)
 uint julia(dvec2 c)
 {
 	uint i;
-    dvec2 z = dvec2(SEED_REAL, SEED_IMAG);
+    dvec2 z = dvec2(seed_real, seed_imag);
     for(i=0; i<max_iter; ++i)
     {
         double x = (c.x * c.x - c.y * c.y) + z.x;

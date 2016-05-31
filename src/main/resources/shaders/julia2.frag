@@ -12,6 +12,8 @@ uniform float scale;
 uniform int max_iter;
 uniform float aspect;
 uniform sampler1D tex;
+uniform float seed_real;
+uniform float seed_imag;
 
 out vec4 frag_color;
 
@@ -66,7 +68,7 @@ void main()
         double(scale)*double(frag_pos.y)+double(transly)
     );
 
-    dvec2 z = dvec2(SEED_REAL, SEED_IMAG);
+    dvec2 z = dvec2(seed_real, seed_imag);
     for(uint i=0; i<max_iter; ++i)
     {
         double x = (c.x * c.x - c.y * c.y) + z.x;
