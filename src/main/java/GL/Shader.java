@@ -21,9 +21,11 @@ public class Shader {
     private int vertex_shader, fragment_shader;
     private int shader_program;
     private int tx, ty, scale, max_i, aspect, sx, sy;
+    private String path;
 
     public Shader(String name)
     {
+        this.path = name;
         vertex_shader = glCreateShader(GL_VERTEX_SHADER);
         Charset charset = Charset.forName("UTF-8");
         //Charset charset = Charset.defaultCharset();
@@ -55,6 +57,11 @@ public class Shader {
         max_i = glGetUniformLocation(shader_program, "max_iter");
         aspect = glGetUniformLocation(shader_program, "aspect");
         unbind();
+    }
+
+    public String getPath()
+    {
+        return path;
     }
 
     private static String readFile(String path, Charset encoding)

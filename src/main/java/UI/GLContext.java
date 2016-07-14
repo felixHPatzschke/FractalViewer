@@ -30,7 +30,7 @@ public class GLContext extends Thread
     private GLFWWindowPosCallback windowPosCallback = null;
     private GLFWWindowSizeCallback windowSizeCallback = null;
     private GLFWWindowCloseCallback windowCloseCallback = null;
-    private boolean something_changed = true;
+    private boolean something_changed = true, benchmark = false;
 
 
 
@@ -63,7 +63,7 @@ public class GLContext extends Thread
         GL.createCapabilities();
 
         try{
-            shader = new Shader("julia.frag");
+            shader = new Shader("newton2.frag");
         } catch (Exception ex)
         {
             ex.printStackTrace(System.err);
@@ -88,6 +88,8 @@ public class GLContext extends Thread
                         camera.zoom(-multiplier);
                     if(key == GLFW_KEY_DOWN && action == GLFW_PRESS)
                         camera.zoom(multiplier);
+                    if(key == GLFW_KEY_B && action == GLFW_RELEASE)
+                        benchmark = true;
                 }
                 if((mods & GLFW_MOD_ALT) != 0)
                 {
@@ -114,9 +116,9 @@ public class GLContext extends Thread
                 if(key == GLFW_KEY_SPACE && action == GLFW_RELEASE)
                     camera.reset();
                 if(key == GLFW_KEY_W&& action == GLFW_PRESS)
-                    camera.increment_iterations(1);
+                    camera.increment_iterations((int)(1/multiplier));
                 if(key == GLFW_KEY_Q && action == GLFW_PRESS)
-                    camera.increment_iterations(-1);
+                    camera.increment_iterations((int)(-1/multiplier));
             }
         });
         glfwSetWindowSizeCallback(window, windowSizeCallback = new GLFWWindowSizeCallback() {
@@ -176,11 +178,16 @@ public class GLContext extends Thread
         //glEnable(GL_BLEND);
         //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+        double frametime = 0.0;
 
         while(glfwWindowShouldClose(window)==GLFW_FALSE)
         {
             if(something_changed)
             {
+                if(benchmark)
+                {
+                    frametime = glfwGetTime();
+                }
                 glClear(GL_COLOR_BUFFER_BIT); // clear the framebuffer
                 shader.bind();
                 camera.apply(shader);
@@ -204,6 +211,19 @@ public class GLContext extends Thread
 
                 glfwSwapBuffers(window);
                 something_changed = false;
+
+                if(benchmark)
+                {
+                    frametime = glfwGetTime()-frametime;
+                    System.out.println(
+                            "Drawing " + shader.getPath() + ":\n" +
+                            "Framebuffer: " + Settings.glfw_window_width + "x" + Settings.glfw_window_height + "\n" +
+                            //"Area: [" +  + "]x[" + Settings.glfw_window_height + "]\n" +
+                            camera.getIterations() + " Iterations\n" +
+                            "Frametime: " + 1000.0*frametime + "ms / Framerate: " + 1.0/frametime + "FPS"
+                    );
+                    benchmark = false;
+                }
             }
             glfwPollEvents();
         }
