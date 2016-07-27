@@ -8,6 +8,8 @@
 #define ROOT_TWO 2u
 #define ROOT_THREE 3u
 
+#define PI 3.1415926535897932384626433832795
+
 in vec2 frag_pos;
 
 uniform float translx;
@@ -85,11 +87,28 @@ void main()
             double(scale)*double(frag_pos.y)+double(transly)
     );
     uint i;
-    for(i=0; i<max_iter; ++i)
+    dmat2 mfactor;
+    double sfactor;
+    //mfactor = dmat2(1.0, 1.0, -1.0, 1.0);     // 45° rotation Matrix, scalar factor sqrt2
+    //mfactor = dmat2(0.0, 1.0, -1.0, 0.0);     // 90° rotation Matrix
+    //mfactor = dmat2(1.0, 0.0, 0.0, 1.0);      // Identity Matrix
+    mfactor = dmat2(double(cos(seed_real*PI)), double(sin(seed_real*PI)),
+                    -1.0*double(sin(seed_real*PI)), double(cos(seed_real*PI)));
+    //sfactor = 0.7071067811865475;
+    //sfactor = 1.0;
+    sfactor = seed_imag;
+    /**
+    In order to imitate complex multiplication, the vector is multiplied
+    by a rotation matrix for the complex angle of the factor and real number
+    as the absolute value of the complex factor.
+    Here, seed_imag makes the absolute value and seed_real the argument.
+    */
+
+    for(i=1; i<max_iter; ++i)
     {
-        dvec2 zn = z - cdiv(f(z), df(z));
+        dvec2 zn = z - sfactor*(mfactor*cdiv(f(z), df(z)));
         if(distance(zn, z)<ETA) break;
         z = zn;
     }
-	frag_color = get_c(i, root_index(z));
+    frag_color = get_c(i, root_index(z));
 }
