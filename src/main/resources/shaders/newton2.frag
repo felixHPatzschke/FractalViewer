@@ -124,7 +124,7 @@ dvec2 f(dvec2 n)
     //return dvec2(n.x*n.x - n.y*n.y - 1.0, 2*n.x*n.y);
 
     // (z-1)*z²
-    return cmul(csqr(n), n-dvec2(1.0, 0.0))+dvec2(0.0, 1.0);
+    //return cmul(csqr(n), n-dvec2(1.0, 0.0))+dvec2(0.0, 1.0);
 
     // z³-1
     return dvec2(n.x*n.x*n.x - 3.0*n.x*n.y*n.y - 1.0, -n.y*n.y*n.y + 3.0*n.x*n.x*n.y);
@@ -161,7 +161,7 @@ dvec2 df(dvec2 n)
     //return 2.0 * n;
 
     // z²+2*z*(z-1)
-    return csqr(n)+(2*cmul(n,n-dvec2(1.0, 0.0)));
+    //return csqr(n)+(2*cmul(n,n-dvec2(1.0, 0.0)));
 
     // 3 z²
     return 3.0 * vec2(n.x*n.x - n.y*n.y, 2.0 * n.x * n.y);
@@ -217,7 +217,12 @@ void main()
         z = f(z);
 
     double a = sqrt(z.x*z.x+z.y*z.y);
-    float angle = ((option_enum & 2) == 0) ? (atan2(float(z.y), float(z.x))) : (atan2(-sin(0.04*PI*i), -cos(0.04*PI*i)));
+    float angle = ((option_enum & 2) == 0)
+                ? (atan2(float(z.y), float(z.x)))
+                : (atan2(
+                    -sin(0.04*PI*float(i)),
+                    -cos(0.04*PI*float(i)))
+                );
     frag_color = get_c(angle, float(a));
     if((option_enum&4)==0) frag_color = vec4(1.0, 1.0, 1.0, 2.0)-frag_color;
 }
