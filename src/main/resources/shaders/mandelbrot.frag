@@ -11,6 +11,7 @@ uniform float aspect;
 uniform sampler1D tex;
 uniform float seed_real;
 uniform float seed_imag;
+uniform int option_enum;
 
 out vec4 frag_color;
 
@@ -28,17 +29,47 @@ vec4 get_c(uint i)
     return vec4(r, g, b, 1.0);
 }
 
+dvec2 cmul(dvec2 a, dvec2 b) { return dvec2( (a.x*b.x - a.y*b.y), (a.y*b.x + a.x*b.y) ); }
+
+dvec2 cpow(dvec2 a, int x)
+{
+    if(x<=0)
+            return dvec2(1.0, 0.0);
+    if(x==1)
+        return a;
+    if(x==2)
+        return dvec2((a.x*a.x - a.y*a.y), (2*a.x*a.y));
+    dvec2 res = a;
+    while(x-->1)
+        res = cmul(res, a);
+    /*while(x>=2)
+        if(x%2==0)
+        {
+            res = dvec2((res.x*res.x - res.y*res.y), (2*res.x*res.y));
+            x /= 2;
+            //x>>1;
+        }
+        else
+        {
+            res = cmul(a, res);
+            --x;
+        }
+    */
+    return res;
+
+}
+
 uint mandelbrot(dvec2 c)
 {
 	uint i;
     dvec2 z = dvec2(0.0, 0.0);
     for(i=0; i<max_iter; ++i)
     {
-        double x = (z.x * z.x - z.y * z.y) + c.x;
-        double y = (2*z.x*z.y) + c.y;
-        if(x*x+y*y>4.0) break;
-        z.x = x;
-        z.y = y;
+        dvec2 zn = cpow(z, option_enum-2) + c;
+        //double x = (z.x * z.x - z.y * z.y) + c.x;
+        //double y = (2*z.x*z.y) + c.y;
+        if(zn.x*zn.x+zn.y*zn.y>4.0) break;
+        z = zn;
     }
     return i;
 }

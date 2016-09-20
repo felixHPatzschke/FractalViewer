@@ -12,6 +12,8 @@ public abstract class Settings {
     public static int glfw_window_width, glfw_window_height, glfw_window_x, glfw_window_y;
     public static int jfx_width, jfx_height, jfx_x, jfx_y;
     public static String shader_path, natives_path;
+    public static boolean benchmark;
+
     public static final String title = "FractalViewer v0.2";
 
 
@@ -43,6 +45,7 @@ public abstract class Settings {
 
         shader_path = o.getString("shader_path");
         natives_path = o.getString("natives_path");
+        benchmark = o.getBoolean("benchmark");
     }
 
     public static void exportConfig()
@@ -62,6 +65,7 @@ public abstract class Settings {
         res.put("jfx_stage", jfx);
         res.put("shader_path", shader_path);
         res.put("natives_path", natives_path);
+        res.put("benchmark", benchmark);
 
         try(FileWriter fw = new FileWriter("./settings.json"))
         {
@@ -89,6 +93,8 @@ public abstract class Settings {
 
         shader_path = "src/main/resources/shaders";
         natives_path = "native";
+
+        benchmark = false;
 
         exportConfig();
     }

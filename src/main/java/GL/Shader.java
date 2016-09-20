@@ -20,7 +20,7 @@ public class Shader {
 
     private int vertex_shader, fragment_shader;
     private int shader_program;
-    private int tx, ty, scale, max_i, aspect, sx, sy;
+    private int tx, ty, scale, max_i, aspect, sx, sy, oe;
     private String path;
 
     public Shader(String name)
@@ -56,6 +56,7 @@ public class Shader {
         scale = glGetUniformLocation(shader_program, "scale");
         max_i = glGetUniformLocation(shader_program, "max_iter");
         aspect = glGetUniformLocation(shader_program, "aspect");
+        oe = glGetUniformLocation(shader_program, "option_enum");
         unbind();
     }
 
@@ -131,4 +132,12 @@ public class Shader {
         return sy;
     }
 
+    public int getOptionEnumLocation()
+    {
+        return oe;
+    }
+
+    public int getProgramID() {
+        return this.shader_program;
+    }
 }

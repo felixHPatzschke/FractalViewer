@@ -18,7 +18,7 @@ public class UIController {
 
     @FXML
     public void initialize(){
-        glContext = new GLContext();
+        glContext = new GLContext("newton2.frag");
         glContext.start();
     }
 

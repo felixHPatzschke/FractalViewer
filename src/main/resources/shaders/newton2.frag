@@ -4,9 +4,7 @@
 #define ETA_TWO (1.0e-1)
 
 #define PI 3.1415926535897932384626433832795
-#define COLOR_POSITION 1
-#define COLOR_VALUE 2
-#define COLOR_MAPPING COLOR_POSITION
+
 
 in vec2 frag_pos;
 
@@ -18,16 +16,36 @@ uniform float aspect;
 uniform sampler1D tex;
 uniform float seed_real;
 uniform float seed_imag;
+uniform int option_enum;
 
 out vec4 frag_color;
 
+
 vec4 get_c(float H/*angle*/, float abs)
 {
-    abs/=sqrt(2.0);
+//    if((option_enum & 1)==1)
+    //    abs/=sqrt(3.0);
+//    else if((option_enum & 2)==2)
+        abs /= 2*sqrt(2.0);
+        //abs /= PI;
+
+
+    abs = -1/(abs+1)+1;
+
     if(H<0.0)
         H+=2*PI;
-    float S = sqrt(abs/2);
-    float V = (1.0-(abs/2))*(1.0-(abs/2));
+
+    if(abs>1)
+        //return vec4(0.0, 0.0, 0.0, 1.0);
+//        if((option_enum & 4)==4)
+            abs -= int(abs);
+//        else
+            //abs = 1/(abs);
+//    if((option_enum & 8)==8)
+    //abs=1-abs;
+
+    float S = sqrt(abs);
+    float V = (1.0-(abs))*(1.0-(abs));
 
     // HSV to RGB conversion
     int h = int(3.0*H/PI);
@@ -66,25 +84,112 @@ float atan2(float y, float x)
     }
 }
 
-dvec2 f(dvec2 n)
-{
-    return dvec2(n.x*n.x*n.x - 3.0*n.x*n.y*n.y - 1.0, -n.y*n.y*n.y + 3.0*n.x*n.x*n.y);
-    //return dvec2(n.x*n.x - n.y*n.y - 1.0, 2*n.x*n.y);
-    //return dvec2(double(sin(float(n.x))), double(sinh(float(n.y))));
-}
-
-dvec2 df(dvec2 n)
-{
-    return 3.0 * vec2(n.x*n.x - n.y*n.y, 2.0 * n.x * n.y);
-    //return 2.0 * n;
-    //return dvec2(double(cos(float(n.x))), double(cosh(float(n.y))));
-}
-
 dvec2 cdiv(dvec2 a, dvec2 b)
 {
     double d = dot(b, b);
     if(d == 0.0) return a;
     else return dvec2( (a.x*b.x + a.y*b.y) / d, (a.y*b.x - a.x*b.y) / d );
+}
+
+dvec2 cmul(dvec2 a, dvec2 b) { return dvec2( (a.x*b.x - a.y*b.y), (a.y*b.x + a.x*b.y) ); }
+
+dvec2 csqr(dvec2 a) { return dvec2(a.x*a.x-a.y*a.y, 2*a.x*a.y); }
+
+double rexp(double x, uint n)
+{
+    double xi = 1;
+    double d = 1;
+    double res = 0;
+    for(uint i=1; i<=n; ++i)
+    {
+        res += xi/d;
+        xi *= x;
+        d *= i;
+    }
+    return res;
+}
+
+dvec2 cexp(dvec2 x)
+{
+    return rexp(x.x, 6)*dvec2(double(cos(float(x.y))), double(sin(float(x.y))));
+}
+
+dvec2 csin(dvec2 x) { return dvec2(double(sin(float(x.x))), double(sinh(float(x.y)))); }
+
+dvec2 ccos(dvec2 x) { return dvec2(double(cos(float(x.x))), double(cosh(float(x.y)))); }
+
+dvec2 f(dvec2 n)
+{
+    // z²-1
+    //return dvec2(n.x*n.x - n.y*n.y - 1.0, 2*n.x*n.y);
+
+    // (z-1)*z²
+    return cmul(csqr(n), n-dvec2(1.0, 0.0))+dvec2(0.0, 1.0);
+
+    // z³-1
+    return dvec2(n.x*n.x*n.x - 3.0*n.x*n.y*n.y - 1.0, -n.y*n.y*n.y + 3.0*n.x*n.x*n.y);
+
+    // z³-1
+    //return cmul(n,cmul(n,n))+dvec2(-1.0, 0.0);
+
+    // z³-z+i
+    //return cmul(n,cmul(n,n)) - n + dvec2(0.0, 1.0);
+
+    // z^4-1
+    //return csqr(csqr(n))+dvec2(-1.0, 0.0);
+
+    // (z²-2)² - 1  =  z^4 - 4z² + 3
+    //return csqr(csqr(n) - dvec2(1.0, 0.0)) - dvec2(1.0, 0.0);
+
+    // z^4-z^2+i
+    //return csqr(csqr(n))-csqr(n)+dvec2(0.0, 1.0);
+
+    // e^z-1
+    //return cexp(n)-dvec2(1.0, 0.0);
+
+    // sin(z)
+    //return csin(n);
+    //return dvec2(double(cos(float(n.x))), double(cos(float(n.y))));
+
+    // RE( 2 - 2 cos(2x) - 4x sin(x) + x² - x^4 )
+    //return dvec2(2.0 - (2*cos(2*float(n.x))) - (4*n.x*sin(float(n.x))) + n.x*n.x - n.x*n.x*n.x*n.x, n.y*n.y);
+}
+
+dvec2 df(dvec2 n)
+{
+    // 2 z
+    //return 2.0 * n;
+
+    // z²+2*z*(z-1)
+    return csqr(n)+(2*cmul(n,n-dvec2(1.0, 0.0)));
+
+    // 3 z²
+    return 3.0 * vec2(n.x*n.x - n.y*n.y, 2.0 * n.x * n.y);
+
+    // 3 z²
+    //return 3*csqr(n);
+
+    // 3z²-1
+    //return 3*csqr(n)+dvec2(-1.0, 0.0);
+
+    // 4 z³
+    //return 4*cmul(n,cmul(n,n));
+
+    // 4z³ - 8z
+    //return 4*cmul(n, csqr(csqr(n) - dvec2(1.0, 0.0)));
+
+    // 4z³-2z
+    //return 4*cmul(n,csqr(n))-2*n;
+
+    // e^z
+    //return cexp(n);
+
+    // cos(z)
+    //return ccos(n);
+    //return -1*dvec2(double(sin(float(n.x))), double(sin(float(n.y))));
+
+    // RE( -4x³ + 2x - 4 sin(x) - 4x cos(x) + 8 sin(x) cos(x) )
+    //return dvec2(((-4*n.x*n.x*n.x) + (2*n.x) - (4*sin(float(n.x))) - (4*n.x*cos(float(n.x))) + (8*sin(float(n.x)*cos(float(n.x))))), 2*n.y);
 }
 
 void main()
@@ -93,33 +198,26 @@ void main()
             double(aspect)*(double(scale)*double(frag_pos.x)+double(translx)),
             double(scale)*double(frag_pos.y)+double(transly)
     );
-    uint i;
 
     dmat2 mfactor;
     double sfactor;
-    //mfactor = dmat2(1.0, 1.0, -1.0, 1.0);     // 45° rotation Matrix, scalar factor sqrt2
-    //mfactor = dmat2(0.0, 1.0, -1.0, 0.0);     // 90° rotation Matrix
-    //mfactor = dmat2(1.0, 0.0, 0.0, 1.0);      // Identity Matrix
     mfactor = dmat2(double(cos(seed_real*PI)), double(sin(seed_real*PI)),
                     -1.0*double(sin(seed_real*PI)), double(cos(seed_real*PI)));
-    //sfactor = 0.7071067811865475;
-    //sfactor = 1.0;
     sfactor = seed_imag;
 
+    uint i;
     for(i=1; i<max_iter; ++i)
     {
         dvec2 zn = z - sfactor*(mfactor*cdiv(f(z), df(z)));
-        //if(distance(zn, z)<ETA) break;
+        if(distance(zn, z)<ETA) break;
         z = zn;
     }
-    if(COLOR_MAPPING == COLOR_VALUE)
-        z=f(z);
-    if(z.x==0.0 && z.y==0.0)
-        frag_color = vec4(1.0, 1.0, 1.0, 1.0);
-    else
-    {
-        double a = sqrt(z.x*z.x+z.y*z.y);
-        float angle = atan2(float(z.y), float(z.x));
-	    frag_color = get_c(angle, float(a));
-    }
+
+    if((option_enum & 1) == 1)
+        z = f(z);
+
+    double a = sqrt(z.x*z.x+z.y*z.y);
+    float angle = ((option_enum & 2) == 0) ? (atan2(float(z.y), float(z.x))) : (atan2(-sin(0.04*PI*i), -cos(0.04*PI*i)));
+    frag_color = get_c(angle, float(a));
+    if((option_enum&4)==0) frag_color = vec4(1.0, 1.0, 1.0, 2.0)-frag_color;
 }

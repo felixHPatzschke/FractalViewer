@@ -21,8 +21,10 @@ vec4 get_c(float H/*angle*/, float abs)
 {
     if(H<0.0)
         H+=2*PI;
-    float S = sqrt(abs/2);
-    float V = (1.0-(abs/2))*(1.0-(abs/2));
+    abs/=2;
+    abs=1-abs;  // inverts the brightness within the valid area, makes for a visible bondary
+    float S = sqrt(abs);
+    float V = (1.0-(abs))*(1.0-(abs));
 
     // HSV to RGB conversion
     int h = int(3.0*H/PI);
@@ -69,17 +71,19 @@ void main()
     );
 
     dvec2 z = dvec2(seed_real, seed_imag);
+    double x = c.x;
+    double y = c.y;
     for(uint i=0; i<max_iter; ++i)
     {
-        double x = (c.x * c.x - c.y * c.y) + z.x;
-        double y = (2*c.x*c.y) + z.y;
+        c.x = x;
+        c.y = y;
         if(x*x+y*y>4.0)
         {
             frag_color = vec4(0.0, 0.0, 0.0, 1.0);
             return;
         }
-        c.x = x;
-        c.y = y;
+        x = (c.x * c.x - c.y * c.y) + z.x;
+        y = (2*c.x*c.y) + z.y;
     }
     if(c.x==0.0 && c.y==0.0)
         frag_color = vec4(1.0, 1.0, 1.0, 1.0);

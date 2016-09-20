@@ -11,18 +11,29 @@ import java.nio.IntBuffer;
  */
 public class Camera {
 
-    private float scale, tx, ty, aspect;
-    private float sx, sy;
+    private double scale, tx, ty, aspect;
+    private double sx, sy;
     private int mi;
+    private int option_enum;
 
 
     public Camera()
     {
         reset();
+        resetSeed();
         mi = 24;
         aspect = 1.0f;
-        sx = 0.0f;
-        sy = 1.0f;
+        option_enum = 4;
+        this.zero_shift();
+    }
+
+    public void zero_shift()
+    {
+        this.shift_option(0);
+        this.shift_seed(0,0);
+        this.increment_iterations(0);
+        this.translate(0,0);
+        this.zoom(0);
     }
 
     public final void reset()
@@ -32,16 +43,23 @@ public class Camera {
         ty = 0.0f;
     }
 
+    public final void resetSeed()
+    {
+        sx = 0.0f;
+        sy = 1.0f;
+    }
+
 
     public void apply(Shader s)
     {
-        glUniform1f(s.getScaleLocation(), scale);
-        glUniform1f(s.getTranslXLocation(), tx);
-        glUniform1f(s.getTranslYLocation(), ty);
-        glUniform1i(s.getMaxIterLocation(), mi);
-        glUniform1f(s.getAspectLocation(), aspect);
-        glUniform1f(s.getSeedRealLocation(), sx);
-        glUniform1f(s.getSeedImagLocation(), sy);
+        glUniform1f(s.getScaleLocation(), (float)scale);
+        glUniform1f(s.getTranslXLocation(), (float)tx);
+        glUniform1f(s.getTranslYLocation(), (float)ty);
+        glUniform1i(s.getMaxIterLocation(), (int)mi);
+        glUniform1f(s.getAspectLocation(), (float)aspect);
+        glUniform1f(s.getSeedRealLocation(), (float)sx);
+        glUniform1f(s.getSeedImagLocation(), (float)sy);
+        glUniform1i(s.getOptionEnumLocation(), (int)option_enum);
     }
 
     public void translate(float x, float y)
@@ -65,7 +83,19 @@ public class Camera {
     public void increment_iterations(int i)
     {
         if(mi+i>0) mi += i;
-        System.out.println("Iterations: " + mi);
+        System.out.println("Iterations: " + (mi-1));
+    }
+
+    public void shift_option(int i)
+    {
+        if(option_enum+i>=0) option_enum+=i;
+        System.out.println("Option: " + option_enum);
+        System.out.println("\tMandelbrot Set: z := z^" + (option_enum-2) + " + c");
+        System.out.println("\tNewton Fractal:"
+                + "\n\t\t" + (((option_enum & 1) == 0)?("Mapping Position"):("Mapping Value"))
+                + "\n\t\t" + (((option_enum & 2) == 0)?("Colour by Complex Value"):("Colour by Iteration"))
+                + (((option_enum & 4) == 0)?("\n\t\tInverting Colour"):(""))
+        );
     }
 
     public int getIterations()

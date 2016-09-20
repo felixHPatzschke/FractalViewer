@@ -12,6 +12,8 @@ uniform float aspect;
 uniform sampler1D tex;
 uniform float seed_real;
 uniform float seed_imag;
+uniform int option_enum;
+
 
 out vec4 frag_color;
 
@@ -19,8 +21,10 @@ vec4 get_c(float H/*angle*/, float abs)
 {
     if(H<0.0)
         H+=2*PI;
-    float S = sqrt(abs/2);
-    float V = (1.0-(abs/2))*(1.0-(abs/2));
+    abs/=2;
+    //abs=1-abs;  // inverts the brightness within the valid area, makes for a visible bondary
+    float S = sqrt(abs);
+    float V = (1.0-(abs))*(1.0-(abs));
 
     // HSV to RGB conversion
     int h = int(3.0*H/PI);
@@ -59,6 +63,36 @@ float atan2(float y, float x)
     }
 }
 
+dvec2 cmul(dvec2 a, dvec2 b) { return dvec2( (a.x*b.x - a.y*b.y), (a.y*b.x + a.x*b.y) ); }
+
+dvec2 cpow(dvec2 a, int x)
+{
+    if(x<=0)
+            return dvec2(1.0, 0.0);
+    if(x==1)
+        return a;
+    if(x==2)
+        return dvec2((a.x*a.x - a.y*a.y), (2*a.x*a.y));
+    dvec2 res = a;
+    while(x-->1)
+        res = cmul(res, a);
+    /*while(x>=2)
+        if(x%2==0)
+        {
+            res = dvec2((res.x*res.x - res.y*res.y), (2*res.x*res.y));
+            x /= 2;
+            //x>>1;
+        }
+        else
+        {
+            res = cmul(a, res);
+            --x;
+        }
+    */
+    return res;
+
+}
+
 void main()
 {
     dvec2 c = dvec2(
@@ -69,8 +103,10 @@ void main()
     dvec2 z = dvec2(0.0, 0.0);
     for(uint i=0; i<max_iter; ++i)
     {
-        double x = (z.x * z.x - z.y * z.y) + c.x;
-        double y = (2*z.x*z.y) + c.y;
+        dvec2 zn = cpow(z, option_enum-2) + c;
+        double x = zn.x;//(z.x * z.x - z.y * z.y) + c.x;
+        double y = zn.y;//(2*z.x*z.y) + c.y;
+        //if(zn.x*zn.x + zn.y*zn.y > 4.0)
         if(x*x+y*y>4.0)
         {
             frag_color = vec4(0.0, 0.0, 0.0, 1.0);

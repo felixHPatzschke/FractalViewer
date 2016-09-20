@@ -13,6 +13,7 @@ uniform float aspect;
 uniform sampler1D tex;
 uniform float seed_real;
 uniform float seed_imag;
+uniform int option_enum;
 
 out vec4 frag_color;
 
@@ -27,17 +28,52 @@ vec4 get_c(uint i)
     return vec4(r, g, b, 1.0);
 }
 
+dvec2 cmul(dvec2 a, dvec2 b) { return dvec2( (a.x*b.x - a.y*b.y), (a.y*b.x + a.x*b.y) ); }
+
+dvec2 cpow(dvec2 a, int x)
+{
+    if(x<=0)
+            return dvec2(1.0, 0.0);
+    if(x==1)
+        return a;
+    if(x==2)
+        return dvec2((a.x*a.x - a.y*a.y), (2*a.x*a.y));
+    dvec2 res = a;
+    while(x-->1)
+        res = cmul(res, a);
+    /*while(x>=2)
+        if(x%2==0)
+        {
+            res = dvec2((res.x*res.x - res.y*res.y), (2*res.x*res.y));
+            x /= 2;
+            //x>>1;
+        }
+        else
+        {
+            res = cmul(a, res);
+            --x;
+        }
+    */
+    return res;
+
+}
+
 uint julia(dvec2 c)
 {
 	uint i;
     dvec2 z = dvec2(seed_real, seed_imag);
+    //double x = c.x;
+    //double y = c.y;
+    dvec2 cn = c;
     for(i=0; i<max_iter; ++i)
     {
-        double x = (c.x * c.x - c.y * c.y) + z.x;
-        double y = (2*c.x*c.y) + z.y;
-        if(x*x+y*y>4.0) break;
-        c.x = x;
-        c.y = y;
+        //c.x = x;
+        //c.y = y;
+        c = cn;
+        if(cn.x*cn.x+cn.y*cn.y>4.0) break;
+        cn = cpow(c, option_enum-2) + z;
+        //x = (c.x * c.x - c.y * c.y) + z.x;
+        //y = (2*c.x*c.y) + z.y;
     }
     return i;
 }
