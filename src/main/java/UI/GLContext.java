@@ -1,5 +1,6 @@
 package UI;
 
+import extra.SeedCurve;
 import org.lwjgl.*;
 import org.lwjgl.glfw.*;
 import org.lwjgl.opengl.*;
@@ -35,8 +36,20 @@ public class GLContext extends Thread
     private GLFWWindowPosCallback windowPosCallback = null;
     private GLFWWindowSizeCallback windowSizeCallback = null;
     private GLFWWindowCloseCallback windowCloseCallback = null;
+    private GLFWCursorPosCallback cursorPosCallback = null;
+    private GLFWMouseButtonCallback mouseButtonCallback = null;
     private boolean something_changed = true;
 
+    private IO.Mouse mouse;
+    private SeedCurve seedcurve = new SeedCurve(0.0, 1.0, 0.2, -0.2) {
+        @Override
+        public double V(double[] x, double t) {
+            return SeedCurve.V1(x) + SeedCurve.V2(x,t) + SeedCurve.V3(x);
+        }
+    };
+    private boolean runseedcurve = false;
+
+    private long framenumber = 0;
 
 
     public GLContext()
@@ -146,6 +159,8 @@ public class GLContext extends Thread
                         camera.shift_option(-1);
                     else
                         camera.increment_iterations((int)(-1/multiplier));
+                if(key == GLFW_KEY_F && action == GLFW_RELEASE)
+                    runseedcurve = !runseedcurve;
             }
         });
         glfwSetWindowSizeCallback(window, windowSizeCallback = new GLFWWindowSizeCallback() {
@@ -170,6 +185,19 @@ public class GLContext extends Thread
             @Override
             public void invoke(long window) {
                 UIController.exit();
+            }
+        });
+
+        glfwSetMouseButtonCallback(window, mouseButtonCallback = new GLFWMouseButtonCallback() {
+            @Override
+            public void invoke(long window, int button, int action, int mods) {
+
+            }
+        });
+        glfwSetCursorPosCallback(window, cursorPosCallback = new GLFWCursorPosCallback() {
+            @Override
+            public void invoke(long window, double xpos, double ypos) {
+
             }
         });
 
@@ -200,7 +228,6 @@ public class GLContext extends Thread
 
     protected void loop()
     {
-
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glColor3f(1.0f, 0.0f, 0.0f);
         glEnable(GL_TEXTURE_2D);
@@ -213,6 +240,8 @@ public class GLContext extends Thread
         {
             if(something_changed)
             {
+                ++framenumber;
+
                 if(Settings.benchmark)
                 {
                     frametime = glfwGetTime();
@@ -256,11 +285,33 @@ public class GLContext extends Thread
                 */
 
                 glfwSwapBuffers(window);
-                something_changed = false;
 
+                if(Settings.benchmark || runseedcurve)
+                    frametime = glfwGetTime()-frametime;
+                if(runseedcurve)
+                {
+                    seedcurve.tick(0.001*frametime);
+                    camera.setSeed(seedcurve.getX());
+                    if(framenumber%100 == 0)
+                    {
+                        seedcurve.debug();
+                        seedcurve.enqueue_normalize();
+                        System.out.println(
+                                "Drawing " + shader.getPath() + ":\n" +
+                                "Framebuffer: " + Settings.glfw_window_width + "x" + Settings.glfw_window_height + "\n" +
+                                //"Area: [" +  + "]x[" + Settings.glfw_window_height + "]\n" +
+                                camera.getIterations() + " Iterations\n" +
+                                "Frametime: " + 1000.0*frametime + "ms / Framerate: " + 1.0/frametime + "FPS"
+                        );
+                    }
+                    something_changed = true;
+                }
+                else
+                {
+                    something_changed = false;
+                }
                 if(Settings.benchmark)
                 {
-                    frametime = glfwGetTime()-frametime;
                     System.out.println(
                             "Drawing " + shader.getPath() + ":\n" +
                             "Framebuffer: " + Settings.glfw_window_width + "x" + Settings.glfw_window_height + "\n" +

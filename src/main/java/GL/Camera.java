@@ -49,6 +49,12 @@ public class Camera {
         sy = 1.0f;
     }
 
+    public final void setSeed(double[] x)
+    {
+        sx = x[0];
+        sy = x[1];
+    }
+
 
     public void apply(Shader s)
     {

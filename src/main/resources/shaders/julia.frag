@@ -2,6 +2,8 @@
 
 #define SEED_REAL   /**0.0/**/     /**-0.7269/**/     /**/-0.8/**/    /**-0.381966/**/
 #define SEED_IMAG   /**1.0/**/     /**0.1889/**/      /**/0.156/**/   /**0.618034/**/
+#define NOISE
+#define NOISE_LVL 0.1
 
 in vec2 frag_pos;
 
@@ -16,6 +18,23 @@ uniform float seed_imag;
 uniform int option_enum;
 
 out vec4 frag_color;
+
+
+#ifdef NOISE
+void noise(vec3 co)
+{
+    co = vec3(fract(sin(dot(co.yz, vec2(12.9898, 78.233))) * 43758.5453),
+              fract(sin(dot(co.zx, vec2(12.9898, 78.233))) * 43758.5453),
+              fract(sin(dot(co.xy, vec2(12.9898, 78.233))) * 43758.5453));
+
+    frag_color = (1.0-NOISE_LVL)*frag_color + NOISE_LVL*vec4(
+        fract(sin(dot(co.xy, vec2(12.9898, 78.233))) * 43758.5453),
+        fract(sin(dot(co.xz, vec2(12.9898, 78.233))) * 43758.5453),
+        fract(sin(dot(co.yz, vec2(12.9898, 78.233))) * 43758.5453),
+        1.0
+    );
+}
+#endif
 
 vec4 get_c(uint i)
 {
@@ -58,9 +77,19 @@ dvec2 cpow(dvec2 a, int x)
 
 }
 
-uint julia(dvec2 c)
+void main()
 {
-	uint i;
+    dvec2 c = dvec2(
+        double(aspect)*(double(scale)*double(frag_pos.x)+double(translx)),
+        double(scale)*double(frag_pos.y)+double(transly)
+    );
+    if( length(c-dvec2(seed_real, seed_imag))<=(scale*0.01) )
+    {
+        frag_color = vec4(1.0, 1.0, 1.0, 2.0)-frag_color;
+        return;
+    }
+
+    uint i;
     dvec2 z = dvec2(seed_real, seed_imag);
     //double x = c.x;
     //double y = c.y;
@@ -75,15 +104,12 @@ uint julia(dvec2 c)
         //x = (c.x * c.x - c.y * c.y) + z.x;
         //y = (2*c.x*c.y) + z.y;
     }
-    return i;
-}
 
-void main()
-{
-    dvec2 c = dvec2(
-        double(aspect)*(double(scale)*double(frag_pos.x)+double(translx)),
-        double(scale)*double(frag_pos.y)+double(transly)
-    );
-    uint i = julia(c);
 	frag_color = get_c(i);
+
+
+    #ifdef NOISE
+    noise(vec3(seed_imag*c.x+c.y, seed_real*seed_imag*c.y*c.x, seed_real*c.y+c.x));
+    #endif
+
 }

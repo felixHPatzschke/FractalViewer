@@ -127,7 +127,7 @@ dvec2 f(dvec2 n)
     //return cmul(csqr(n), n-dvec2(1.0, 0.0))+dvec2(0.0, 1.0);
 
     // z³-1
-    return dvec2(n.x*n.x*n.x - 3.0*n.x*n.y*n.y - 1.0, -n.y*n.y*n.y + 3.0*n.x*n.x*n.y);
+    //return dvec2(n.x*n.x*n.x - 3.0*n.x*n.y*n.y - 1.0, -n.y*n.y*n.y + 3.0*n.x*n.x*n.y);
 
     // z³-1
     //return cmul(n,cmul(n,n))+dvec2(-1.0, 0.0);
@@ -136,7 +136,7 @@ dvec2 f(dvec2 n)
     //return cmul(n,cmul(n,n)) - n + dvec2(0.0, 1.0);
 
     // z^4-1
-    //return csqr(csqr(n))+dvec2(-1.0, 0.0);
+    return csqr(csqr(n))+dvec2(-1.0, 0.0);
 
     // (z²-2)² - 1  =  z^4 - 4z² + 3
     //return csqr(csqr(n) - dvec2(1.0, 0.0)) - dvec2(1.0, 0.0);
@@ -164,7 +164,7 @@ dvec2 df(dvec2 n)
     //return csqr(n)+(2*cmul(n,n-dvec2(1.0, 0.0)));
 
     // 3 z²
-    return 3.0 * vec2(n.x*n.x - n.y*n.y, 2.0 * n.x * n.y);
+    //return 3.0 * vec2(n.x*n.x - n.y*n.y, 2.0 * n.x * n.y);
 
     // 3 z²
     //return 3*csqr(n);
@@ -173,7 +173,7 @@ dvec2 df(dvec2 n)
     //return 3*csqr(n)+dvec2(-1.0, 0.0);
 
     // 4 z³
-    //return 4*cmul(n,cmul(n,n));
+    return 4*cmul(n,cmul(n,n));
 
     // 4z³ - 8z
     //return 4*cmul(n, csqr(csqr(n) - dvec2(1.0, 0.0)));

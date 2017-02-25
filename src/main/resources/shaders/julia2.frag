@@ -63,6 +63,48 @@ float atan2(float y, float x)
     }
 }
 
+uint julia(dvec2 c)
+{
+	uint i;
+    dvec2 z = dvec2(seed_real, seed_imag);
+    //double x = c.x;
+    //double y = c.y;
+    dvec2 cn = c;
+    for(i=0; i<max_iter; ++i)
+    {
+        //c.x = x;
+        //c.y = y;
+        c = cn;
+        if(cn.x*cn.x+cn.y*cn.y>4.0) break;
+        cn.x = c.x*c.x - c.y*c.y + z.x;
+        cn.y = 2*c.x*c.y + z.y;
+        //x = (c.x * c.x - c.y * c.y) + z.x;
+        //y = (2*c.x*c.y) + z.y;
+    }
+    return i;
+}
+
+vec4 get_outer_c(uint i)
+{
+    float r = float(i+1)/float(max_iter);
+    float g = float(i+1)/float(max_iter);
+    float b = float(i+1)/float(max_iter);
+    //float g = (i>max_iter/2)?(float((2*i+1)-max_iter)/float(max_iter)):(0.0);
+    //float b = (i>3*max_iter/4)?(float((4*i+1)-(3*max_iter))/float(max_iter)):(0.0);
+    // TODO: do stuff
+    return vec4(r, g, b, 1.0);
+}
+
+vec4 noise(vec4 original, vec3 co)
+{
+    return 0.8*original + 0.2*vec4(
+        fract(sin(dot(co.xy, vec2(12.9898, 78.233))) * 43758.5453),
+        fract(sin(dot(co.xz, vec2(12.9898, 78.233))) * 43758.5453),
+        fract(sin(dot(co.yz, vec2(12.9898, 78.233))) * 43758.5453),
+        1.0
+    );
+}
+
 void main()
 {
     dvec2 c = dvec2(
@@ -70,7 +112,15 @@ void main()
         double(scale)*double(frag_pos.y)+double(transly)
     );
 
+    uint outeriter = julia(c);
+    if(outeriter < max_iter)
+    {
+        frag_color = get_outer_c(outeriter);
+        return;
+    }
+
     dvec2 z = dvec2(seed_real, seed_imag);
+
     double x = c.x;
     double y = c.y;
     for(uint i=0; i<max_iter; ++i)
@@ -93,4 +143,8 @@ void main()
         float angle = atan2(float(c.y), float(c.x));
 	    frag_color = get_c(angle, float(a));
     }
+
+    vec3 co = vec3(c, outeriter);
+    frag_color = noise(frag_color, co);
+
 }
