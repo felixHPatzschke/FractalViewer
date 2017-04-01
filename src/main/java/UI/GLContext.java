@@ -40,6 +40,9 @@ public class GLContext extends Thread
     private GLFWMouseButtonCallback mouseButtonCallback = null;
     private boolean something_changed = true;
 
+    private double[] modelspaceMouseCoords = {0.0, 0.0}, modelspaceMouseDelta = {0.0, 0.0};
+    private boolean mouseLeftButtonDown = false, mouseRightButtonDown = false;
+
     private IO.Mouse mouse;
     private SeedCurve seedcurve = new SeedCurve(0.0, 1.0, 0.2, -0.2) {
         @Override
@@ -191,13 +194,42 @@ public class GLContext extends Thread
         glfwSetMouseButtonCallback(window, mouseButtonCallback = new GLFWMouseButtonCallback() {
             @Override
             public void invoke(long window, int button, int action, int mods) {
+                System.out.println("Mouse @ " + modelspaceMouseCoords[0] + " | " + modelspaceMouseCoords[1]);
+                System.out.println("action = " + action + " (PRESS = " + GLFW_PRESS + ", RELEASE = " + GLFW_RELEASE + ")");
+                System.out.println("button = " + button + " (LEFT = " + GLFW_MOUSE_BUTTON_LEFT + ", RIGHT = " + GLFW_MOUSE_BUTTON_RIGHT + ")");
 
+                if(button == GLFW_MOUSE_BUTTON_LEFT && ((action == GLFW_PRESS && !mouseLeftButtonDown) || (action == GLFW_RELEASE && mouseLeftButtonDown)))
+                        mouseLeftButtonDown = !mouseLeftButtonDown;
+                if(button == GLFW_MOUSE_BUTTON_RIGHT && ((action == GLFW_PRESS && !mouseRightButtonDown) || (action == GLFW_RELEASE && mouseRightButtonDown)))
+                        mouseRightButtonDown = !mouseRightButtonDown;
+                handleMouseInput();
             }
         });
         glfwSetCursorPosCallback(window, cursorPosCallback = new GLFWCursorPosCallback() {
             @Override
             public void invoke(long window, double xpos, double ypos) {
+                // save old mouse coords
+                modelspaceMouseDelta[0] = modelspaceMouseCoords[0];
+                modelspaceMouseDelta[1] = modelspaceMouseCoords[1];
 
+                // transform screenspace to viewspace coords
+                xpos *= (2.0/Settings.glfw_window_width);
+                xpos -= 1.0;
+                ypos *= (-2.0/Settings.glfw_window_height);
+                ypos += 1.0;
+
+                // transform viewspace to modelspace coords
+                camera.transformViewToModelspace(xpos, ypos, modelspaceMouseCoords);
+
+                // compute new delta
+                modelspaceMouseDelta[0] = modelspaceMouseCoords[0] - modelspaceMouseDelta[0];
+                modelspaceMouseDelta[1] = modelspaceMouseCoords[1] - modelspaceMouseDelta[1];
+
+                // do stuff
+                handleMouseInput();
+                //modelspaceMouseDelta[0] = 0.0;
+                //modelspaceMouseDelta[0] = 0.0;
+                camera.transformViewToModelspace(xpos, ypos, modelspaceMouseCoords);
             }
         });
 
@@ -226,6 +258,20 @@ public class GLContext extends Thread
 
     }
 
+    private void handleMouseInput()
+    {
+        if(mouseRightButtonDown)
+        {
+            camera.setSeed(modelspaceMouseCoords);
+            something_changed = true;
+        }
+        if(mouseLeftButtonDown)
+        {
+            camera.translate(modelspaceMouseDelta);
+            something_changed = true;
+        }
+    }
+
     protected void loop()
     {
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -242,10 +288,10 @@ public class GLContext extends Thread
             {
                 ++framenumber;
 
-                if(Settings.benchmark)
-                {
+                //if(Settings.benchmark)
+                //{
                     frametime = glfwGetTime();
-                }
+                //}
                 //renderedTex.bind();
                 glClear(GL_COLOR_BUFFER_BIT); // clear the framebuffer
                 shader.bind();
@@ -301,7 +347,7 @@ public class GLContext extends Thread
                                 "Framebuffer: " + Settings.glfw_window_width + "x" + Settings.glfw_window_height + "\n" +
                                 //"Area: [" +  + "]x[" + Settings.glfw_window_height + "]\n" +
                                 camera.getIterations() + " Iterations\n" +
-                                "Frametime: " + 1000.0*frametime + "ms / Framerate: " + 1.0/frametime + "FPS"
+                                "Frametime: " + (1000.0*frametime) + "ms / Framerate: " + (1.0/frametime) + "FPS"
                         );
                     }
                     something_changed = true;
@@ -317,7 +363,7 @@ public class GLContext extends Thread
                             "Framebuffer: " + Settings.glfw_window_width + "x" + Settings.glfw_window_height + "\n" +
                             //"Area: [" +  + "]x[" + Settings.glfw_window_height + "]\n" +
                             camera.getIterations() + " Iterations\n" +
-                            "Frametime: " + 1000.0*frametime + "ms / Framerate: " + 1.0/frametime + "FPS"
+                            "Frametime: " + (frametime) + "ms / Framerate: " + (1000.0/frametime) + "FPS"
                     );
                     Settings.benchmark = false;
                 }

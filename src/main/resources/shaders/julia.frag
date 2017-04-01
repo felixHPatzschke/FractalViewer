@@ -3,7 +3,11 @@
 #define SEED_REAL   /**0.0/**/     /**-0.7269/**/     /**/-0.8/**/    /**-0.381966/**/
 #define SEED_IMAG   /**1.0/**/     /**0.1889/**/      /**/0.156/**/   /**0.618034/**/
 #define NOISE
-#define NOISE_LVL 0.1
+#define NOISE_LVL 0.2
+#undef NOISE
+
+#define SEEDCURVEDEBUG
+//#undef SEEDCURVEDEBUG
 
 in vec2 frag_pos;
 
@@ -83,11 +87,14 @@ void main()
         double(aspect)*(double(scale)*double(frag_pos.x)+double(translx)),
         double(scale)*double(frag_pos.y)+double(transly)
     );
+
+    #ifdef SEEDCURVEDEBUG
     if( length(c-dvec2(seed_real, seed_imag))<=(scale*0.01) )
     {
         frag_color = vec4(1.0, 1.0, 1.0, 2.0)-frag_color;
         return;
     }
+    #endif
 
     uint i;
     dvec2 z = dvec2(seed_real, seed_imag);

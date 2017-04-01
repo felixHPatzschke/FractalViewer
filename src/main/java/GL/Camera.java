@@ -55,6 +55,12 @@ public class Camera {
         sy = x[1];
     }
 
+    public void transformViewToModelspace(double x, double y, double[] res)
+    {
+        res[0] = aspect*(scale*x+tx);
+        res[1] = scale*y+ty;
+    }
+
 
     public void apply(Shader s)
     {
@@ -73,6 +79,12 @@ public class Camera {
         tx += x*scale*0.1;
         ty += y*scale*0.1;
         System.out.println("Translation: " + tx + " | " + ty);
+    }
+
+    public void translate(double[] dx)
+    {
+        tx -= dx[0]/aspect;
+        ty -= dx[1];
     }
 
     public void setAspectRatio(int width, int height)

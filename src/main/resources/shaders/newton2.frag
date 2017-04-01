@@ -5,6 +5,12 @@
 
 #define PI 3.1415926535897932384626433832795
 
+#define NOISE
+#define NOISE_LVL 0.15
+//#if NOISE_LVL == 0.0
+#undef NOISE
+//#endif
+
 
 in vec2 frag_pos;
 
@@ -20,6 +26,22 @@ uniform int option_enum;
 
 out vec4 frag_color;
 
+
+#ifdef NOISE
+void noise(vec3 co)
+{
+    co = vec3(fract(sin(dot(co.yz, vec2(12.9898, 78.233))) * 43758.5453),
+              fract(sin(dot(co.zx, vec2(12.9898, 78.233))) * 43758.5453),
+              fract(sin(dot(co.xy, vec2(12.9898, 78.233))) * 43758.5453));
+
+    frag_color = (1.0-NOISE_LVL)*frag_color + NOISE_LVL*vec4(
+        fract(sin(dot(co.xy, vec2(12.9898, 78.233))) * 43758.5453),
+        fract(sin(dot(co.xz, vec2(12.9898, 78.233))) * 43758.5453),
+        fract(sin(dot(co.yz, vec2(12.9898, 78.233))) * 43758.5453),
+        1.0
+    );
+}
+#endif
 
 vec4 get_c(float H/*angle*/, float abs)
 {
@@ -225,4 +247,12 @@ void main()
                 );
     frag_color = get_c(angle, float(a));
     if((option_enum&4)==0) frag_color = vec4(1.0, 1.0, 1.0, 2.0)-frag_color;
+
+    #ifdef NOISE
+    noise(vec3(
+        (aspect)*((scale)*(frag_pos.x)+(translx))+seed_imag,
+        (scale)*(frag_pos.y)+(transly)+seed_real,
+        i+(seed_imag*seed_real)
+    ));
+    #endif
 }

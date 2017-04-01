@@ -35,6 +35,8 @@ public abstract class SeedCurve {
         if(needsNormalize)
             normalize();
 
+        dt *= 1000.0;
+
         x[0] += v[0]*dt;//(10.0*Math.sqrt(T()));
         x[1] += v[1]*dt;//(10.0*Math.sqrt(T()));
 
