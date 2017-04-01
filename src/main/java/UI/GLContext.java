@@ -38,6 +38,7 @@ public class GLContext extends Thread
     private GLFWWindowCloseCallback windowCloseCallback = null;
     private GLFWCursorPosCallback cursorPosCallback = null;
     private GLFWMouseButtonCallback mouseButtonCallback = null;
+    private GLFWScrollCallback scrollCallback = null;
     private boolean something_changed = true;
 
     private double[] modelspaceMouseCoords = {0.0, 0.0}, modelspaceMouseDelta = {0.0, 0.0};
@@ -194,9 +195,9 @@ public class GLContext extends Thread
         glfwSetMouseButtonCallback(window, mouseButtonCallback = new GLFWMouseButtonCallback() {
             @Override
             public void invoke(long window, int button, int action, int mods) {
-                System.out.println("Mouse @ " + modelspaceMouseCoords[0] + " | " + modelspaceMouseCoords[1]);
-                System.out.println("action = " + action + " (PRESS = " + GLFW_PRESS + ", RELEASE = " + GLFW_RELEASE + ")");
-                System.out.println("button = " + button + " (LEFT = " + GLFW_MOUSE_BUTTON_LEFT + ", RIGHT = " + GLFW_MOUSE_BUTTON_RIGHT + ")");
+                //System.out.println("Mouse @ " + modelspaceMouseCoords[0] + " | " + modelspaceMouseCoords[1]);
+                //System.out.println("action = " + action + " (PRESS = " + GLFW_PRESS + ", RELEASE = " + GLFW_RELEASE + ")");
+                //System.out.println("button = " + button + " (LEFT = " + GLFW_MOUSE_BUTTON_LEFT + ", RIGHT = " + GLFW_MOUSE_BUTTON_RIGHT + ")");
 
                 if(button == GLFW_MOUSE_BUTTON_LEFT && ((action == GLFW_PRESS && !mouseLeftButtonDown) || (action == GLFW_RELEASE && mouseLeftButtonDown)))
                         mouseLeftButtonDown = !mouseLeftButtonDown;
@@ -227,9 +228,15 @@ public class GLContext extends Thread
 
                 // do stuff
                 handleMouseInput();
-                //modelspaceMouseDelta[0] = 0.0;
-                //modelspaceMouseDelta[0] = 0.0;
                 camera.transformViewToModelspace(xpos, ypos, modelspaceMouseCoords);
+            }
+        });
+        glfwSetScrollCallback(window, scrollCallback = new GLFWScrollCallback() {
+            @Override
+            public void invoke(long window, double xoffset, double yoffset) {
+                //System.out.println("dx = " + xoffset + ", dy = " + yoffset);
+                camera.zoom(modelspaceMouseCoords, 2.0*yoffset);
+                something_changed = true;
             }
         });
 

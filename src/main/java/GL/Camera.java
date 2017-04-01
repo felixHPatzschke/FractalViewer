@@ -98,6 +98,20 @@ public class Camera {
         System.out.println("Scale: " + scale);
     }
 
+    public void zoom(double[] center, double factor)
+    {
+        double ccx = tx - center[0]/aspect;
+        double ccy = ty - center[1];
+
+        factor = 1.0+(0.1*factor);
+        scale *= factor;
+        ccx *= factor;
+        ccy *= factor;
+
+        tx = center[0]/aspect + ccx;
+        ty = center[1] + ccy;
+    }
+
     public void increment_iterations(int i)
     {
         if(mi+i>0) mi += i;
