@@ -235,7 +235,7 @@ public class GLContext extends Thread
             @Override
             public void invoke(long window, double xoffset, double yoffset) {
                 //System.out.println("dx = " + xoffset + ", dy = " + yoffset);
-                camera.zoom(modelspaceMouseCoords, 2.0*yoffset);
+                camera.zoom(modelspaceMouseCoords, -2.0*yoffset);
                 something_changed = true;
             }
         });
